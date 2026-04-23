@@ -46,7 +46,7 @@ const MenuLink = forwardRef((props, ref) => (
 MenuLink.displayName = 'MenuLink'
 
 const RESUME_URL =
-  'https://drive.google.com/file/d/1UWzWu4A6lzX0CnBflB8EV9rMUrriPBMC/view?usp=sharing'
+  'https://drive.google.com/file/d/1H1bHNX4pHD2ERm6CEKKDC9KuIkyHcIY-/view?usp=sharing'
 
 const Navbar = props => {
   const { path } = props

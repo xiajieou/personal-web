@@ -1,5 +1,5 @@
 import NextLink from 'next/link'
-import Image from 'next/image'
+import dynamic from 'next/dynamic'
 import {
   Box,
   Button,
@@ -12,6 +12,11 @@ import {
 } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
 import { useEffect, useState } from 'react'
+
+const Globe = dynamic(() => import('./globe'), {
+  ssr: false,
+  loading: () => null
+})
 
 const PHRASES = [
   'building full-stack apps',
@@ -82,7 +87,13 @@ const Chip = ({ children, color = 'accent.cyan' }) => {
       fontSize="xs"
       fontFamily="var(--font-mono)"
     >
-      <Box w="6px" h="6px" borderRadius="full" bg={color} boxShadow={`0 0 10px ${color}`} />
+      <Box
+        w="6px"
+        h="6px"
+        borderRadius="full"
+        bg={color}
+        boxShadow={`0 0 10px ${color}`}
+      />
       <Box>{children}</Box>
     </HStack>
   )
@@ -90,10 +101,6 @@ const Chip = ({ children, color = 'accent.cyan' }) => {
 
 const Hero = () => {
   const subtle = useColorModeValue('gray.600', 'whiteAlpha.700')
-  const ringBorder = useColorModeValue(
-    'rgba(15,15,20,0.12)',
-    'rgba(255,255,255,0.12)'
-  )
 
   return (
     <Box
@@ -179,15 +186,15 @@ const Hero = () => {
         <Box
           flexShrink={0}
           position="relative"
-          w={{ base: '140px', md: '200px' }}
-          h={{ base: '140px', md: '200px' }}
+          w={{ base: '180px', md: '260px' }}
+          h={{ base: '180px', md: '260px' }}
         >
           <Box
             position="absolute"
-            inset="-14px"
+            inset="-18px"
             borderRadius="full"
             bgGradient="linear(to-tr, #22d3ee, #a855f7, #ff63c3)"
-            filter="blur(22px)"
+            filter="blur(32px)"
             opacity={0.55}
             aria-hidden="true"
           />
@@ -195,19 +202,10 @@ const Hero = () => {
             position="relative"
             borderRadius="full"
             overflow="hidden"
-            border="1.5px solid"
-            borderColor={ringBorder}
             w="full"
             h="full"
           >
-            <Image
-              src="/images/img.png"
-              alt="Xia Jie Ou portrait"
-              fill
-              sizes="(max-width: 768px) 140px, 200px"
-              priority
-              style={{ objectFit: 'cover' }}
-            />
+            <Globe />
           </Box>
         </Box>
       </Flex>

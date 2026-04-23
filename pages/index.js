@@ -26,7 +26,7 @@ import ExperienceItem from '../components/experience-item'
 import SkillTag from '../components/skill-tag'
 
 const RESUME_URL =
-  'https://drive.google.com/file/d/1UWzWu4A6lzX0CnBflB8EV9rMUrriPBMC/view?usp=sharing'
+  'https://drive.google.com/file/d/1H1bHNX4pHD2ERm6CEKKDC9KuIkyHcIY-/view?usp=sharing'
 
 const EXPERIENCES = [
   {
@@ -400,7 +400,7 @@ const ContactSection = () => {
             </Button>
             <Button
               as={Link}
-              href="https://drive.google.com/file/d/1H1bHNX4pHD2ERm6CEKKDC9KuIkyHcIY-/view?usp=sharing"
+              href={RESUME_URL}
               target="_blank"
               leftIcon={<IoDocumentTextOutline />}
               size="md"
