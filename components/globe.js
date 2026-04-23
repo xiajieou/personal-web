@@ -20,9 +20,15 @@ const Globe = () => {
     renderer.domElement.style.width = '100%'
     renderer.domElement.style.height = '100%'
     renderer.domElement.style.display = 'block'
+    renderer.domElement.style.touchAction = 'none'
 
-    const group = new THREE.Group()
-    scene.add(group)
+    // Outer group = physics-driven displacement (springs back to rest)
+    const physicsGroup = new THREE.Group()
+    scene.add(physicsGroup)
+
+    // Inner group = ambient "alive" spin
+    const spinGroup = new THREE.Group()
+    physicsGroup.add(spinGroup)
 
     const innerGeo = new THREE.SphereGeometry(1, 48, 48)
     const innerMat = new THREE.ShaderMaterial({
@@ -51,7 +57,7 @@ const Globe = () => {
       transparent: true
     })
     const innerSphere = new THREE.Mesh(innerGeo, innerMat)
-    group.add(innerSphere)
+    spinGroup.add(innerSphere)
 
     const wireGeo = new THREE.IcosahedronGeometry(1.14, 3)
     const wireMat = new THREE.LineBasicMaterial({
@@ -63,7 +69,7 @@ const Globe = () => {
       new THREE.WireframeGeometry(wireGeo),
       wireMat
     )
-    group.add(wireframe)
+    spinGroup.add(wireframe)
 
     const dotsGeo = new THREE.IcosahedronGeometry(1.22, 4)
     const dotsMat = new THREE.PointsMaterial({
@@ -73,7 +79,7 @@ const Globe = () => {
       opacity: 0.85
     })
     const dots = new THREE.Points(dotsGeo, dotsMat)
-    group.add(dots)
+    spinGroup.add(dots)
 
     const ringGeo = new THREE.RingGeometry(1.45, 1.47, 96)
     const ringMat = new THREE.MeshBasicMaterial({
@@ -86,15 +92,75 @@ const Globe = () => {
     ring.rotation.x = Math.PI * 0.5
     scene.add(ring)
 
-    const pointer = { x: 0, y: 0, tx: 0, ty: 0 }
-    const onMove = e => {
-      const rect = mount.getBoundingClientRect()
-      const cx = rect.left + rect.width / 2
-      const cy = rect.top + rect.height / 2
-      pointer.tx = (e.clientX - cx) / window.innerWidth
-      pointer.ty = (e.clientY - cy) / window.innerHeight
+    // Spring-damped physics for the outer group.
+    // Force = -k * displacement - c * velocity  →  always pulls back to rest.
+    const K = 14 // spring stiffness (higher = snappier)
+    const C = 3.2 // damping (higher = less oscillation)
+    const DRAG_SENSITIVITY = 0.008
+    const MAX_DT = 0.032 // clamp to prevent spring explosions after tab-switches
+
+    const physics = {
+      x: 0,
+      y: 0,
+      vx: 0,
+      vy: 0
     }
-    window.addEventListener('pointermove', onMove, { passive: true })
+
+    const drag = {
+      active: false,
+      pointerId: null,
+      lastX: 0,
+      lastY: 0,
+      lastT: 0
+    }
+
+    const onPointerDown = e => {
+      drag.active = true
+      drag.pointerId = e.pointerId
+      drag.lastX = e.clientX
+      drag.lastY = e.clientY
+      drag.lastT = performance.now()
+      physics.vx = 0
+      physics.vy = 0
+      renderer.domElement.setPointerCapture?.(e.pointerId)
+      renderer.domElement.style.cursor = 'grabbing'
+    }
+
+    const onPointerMove = e => {
+      if (!drag.active || e.pointerId !== drag.pointerId) return
+      const dx = e.clientX - drag.lastX
+      const dy = e.clientY - drag.lastY
+      const now = performance.now()
+      const dt = Math.max((now - drag.lastT) / 1000, 0.001)
+
+      const rotYDelta = dx * DRAG_SENSITIVITY
+      const rotXDelta = dy * DRAG_SENSITIVITY
+
+      physics.y += rotYDelta
+      physics.x += rotXDelta
+
+      // Momentum carried into release
+      physics.vy = rotYDelta / dt
+      physics.vx = rotXDelta / dt
+
+      drag.lastX = e.clientX
+      drag.lastY = e.clientY
+      drag.lastT = now
+    }
+
+    const endDrag = e => {
+      if (e && e.pointerId !== drag.pointerId) return
+      drag.active = false
+      drag.pointerId = null
+      renderer.domElement.releasePointerCapture?.(e?.pointerId)
+      renderer.domElement.style.cursor = 'grab'
+    }
+
+    renderer.domElement.addEventListener('pointerdown', onPointerDown)
+    renderer.domElement.addEventListener('pointermove', onPointerMove)
+    renderer.domElement.addEventListener('pointerup', endDrag)
+    renderer.domElement.addEventListener('pointercancel', endDrag)
+    renderer.domElement.addEventListener('pointerleave', endDrag)
 
     let reduced = false
     if (typeof window !== 'undefined' && window.matchMedia) {
@@ -113,10 +179,12 @@ const Globe = () => {
     })
     ro.observe(mount)
 
+    renderer.domElement.style.cursor = 'grab'
+
     let frame = 0
     let last = performance.now()
     const tick = now => {
-      const dt = Math.min((now - last) / 1000, 0.05)
+      const dt = Math.min((now - last) / 1000, MAX_DT)
       last = now
 
       if (!reduced) {
@@ -126,10 +194,31 @@ const Globe = () => {
         dots.rotation.y -= dt * 0.3
       }
 
-      pointer.x += (pointer.tx - pointer.x) * 0.05
-      pointer.y += (pointer.ty - pointer.y) * 0.05
-      group.rotation.y = pointer.x * 0.6
-      group.rotation.x = -pointer.y * 0.4
+      if (!drag.active) {
+        // Spring pulling rotation back to (0, 0) with damping.
+        const ax = -K * physics.x - C * physics.vx
+        const ay = -K * physics.y - C * physics.vy
+        physics.vx += ax * dt
+        physics.vy += ay * dt
+        physics.x += physics.vx * dt
+        physics.y += physics.vy * dt
+
+        // Snap to rest when the oscillation is imperceptible.
+        if (
+          Math.abs(physics.x) < 1e-4 &&
+          Math.abs(physics.y) < 1e-4 &&
+          Math.abs(physics.vx) < 1e-3 &&
+          Math.abs(physics.vy) < 1e-3
+        ) {
+          physics.x = 0
+          physics.y = 0
+          physics.vx = 0
+          physics.vy = 0
+        }
+      }
+
+      physicsGroup.rotation.x = physics.x
+      physicsGroup.rotation.y = physics.y
 
       ring.rotation.z += dt * 0.15
 
@@ -140,7 +229,11 @@ const Globe = () => {
 
     return () => {
       cancelAnimationFrame(frame)
-      window.removeEventListener('pointermove', onMove)
+      renderer.domElement.removeEventListener('pointerdown', onPointerDown)
+      renderer.domElement.removeEventListener('pointermove', onPointerMove)
+      renderer.domElement.removeEventListener('pointerup', endDrag)
+      renderer.domElement.removeEventListener('pointercancel', endDrag)
+      renderer.domElement.removeEventListener('pointerleave', endDrag)
       ro.disconnect()
       innerGeo.dispose()
       innerMat.dispose()
@@ -161,7 +254,7 @@ const Globe = () => {
     <div
       ref={mountRef}
       aria-hidden="true"
-      style={{ width: '100%', height: '100%', cursor: 'grab' }}
+      style={{ width: '100%', height: '100%' }}
     />
   )
 }
