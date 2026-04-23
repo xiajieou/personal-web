@@ -7,12 +7,16 @@ const StyledDiv = chakra(motion.div, {
   }
 })
 
-const Section = ({ children, delay = 0 }) => (
+const Section = ({ children, delay = 0, id, ...rest }) => (
   <StyledDiv
-    initial={{ y: 10, opacity: 0 }}
-    animate={{ y: 0, opacity: 1 }}
-    transition={{ duration: 0.8, delay }}
-    mb={6}
+    id={id}
+    initial={{ y: 18, opacity: 0 }}
+    whileInView={{ y: 0, opacity: 1 }}
+    viewport={{ once: true, amount: 0.15 }}
+    transition={{ duration: 0.6, delay }}
+    mb={20}
+    scrollMarginTop="90px"
+    {...rest}
   >
     {children}
   </StyledDiv>

@@ -1,6 +1,16 @@
-const Fonts = () => (
-  <style jsx global>{`
-    @import url('https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@300;700&display=swap');
-  `}</style>
-)
+import { Inter, JetBrains_Mono } from 'next/font/google'
+
+export const sans = Inter({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-sans'
+})
+
+export const mono = JetBrains_Mono({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-mono'
+})
+
+const Fonts = () => null
 export default Fonts

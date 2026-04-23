@@ -1,44 +1,47 @@
 import Link from 'next/link'
-import { Text, useColorModeValue } from '@chakra-ui/react'
-
+import { useColorModeValue } from '@chakra-ui/react'
 import styled from '@emotion/styled'
 
 const LogoBox = styled.span`
-  font-weight: bold;
-  font-size: 18px;
   display: inline-flex;
   align-items: center;
-  height: 30px;
-  line-height: 20px;
-  padding: 10px;
+  gap: 8px;
+  font-weight: 700;
+  font-size: 16px;
+  letter-spacing: -0.01em;
+  padding: 6px 8px;
 
-  > svg {
-    transition: 200ms ease;
+  .mono {
+    font-family: var(--font-mono);
+    opacity: 0.65;
+    font-weight: 500;
   }
 
-  &:hover > svg {
-    transform: rotate(20deg);
+  .mark {
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    background: linear-gradient(135deg, #22d3ee 0%, #7c3aed 60%, #ff63c3 100%);
+    box-shadow: 0 0 20px -4px rgba(124, 58, 237, 0.6);
+    transition: transform 220ms ease;
+  }
+
+  &:hover .mark {
+    transform: rotate(20deg) scale(1.08);
   }
 `
 
 const Logo = () => {
+  const color = useColorModeValue('gray.800', 'whiteAlpha.900')
   return (
-    (<Link href="/" scroll={false}>
-
-      <LogoBox>
-        {/* <FootprintIcon /> */}
-        <Text
-          color={useColorModeValue('gray.800', 'whiteAlpha.900')}
-          fontFamily='M PLUS Rounded 1c", sans-serif'
-          fontWeight="bold"
-          ml={3}
-        >
-          Xia Jie Ou
-        </Text>
+    <Link href="/" scroll={false} aria-label="Xia Jie Ou — home">
+      <LogoBox style={{ color }}>
+        <span className="mark" aria-hidden="true" />
+        <span>Xia Jie</span>
+        <span className="mono">/ou</span>
       </LogoBox>
-
-    </Link>)
-  );
+    </Link>
+  )
 }
 
 export default Logo

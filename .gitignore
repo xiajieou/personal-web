@@ -3,3 +3,5 @@ node_modules
 dist
 .vercel
 .env
+
+.git_commit_msg.txt
