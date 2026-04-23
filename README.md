@@ -29,4 +29,4 @@ lib/theme.js  # chakra theme + global styles
 public/       # favicons + profile image
 ```
 
-[Credits to](https://www.craftz.dog/) - Initally took insipration from 
+[Credits to craftz.dog](https://www.craftz.dog/) - Initally took insipration from 
