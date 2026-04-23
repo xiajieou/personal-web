@@ -400,7 +400,7 @@ const ContactSection = () => {
             </Button>
             <Button
               as={Link}
-              href={RESUME_URL}
+              href="https://drive.google.com/file/d/1H1bHNX4pHD2ERm6CEKKDC9KuIkyHcIY-/view?usp=sharing"
               target="_blank"
               leftIcon={<IoDocumentTextOutline />}
               size="md"
