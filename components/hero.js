@@ -15,7 +15,15 @@ import { useEffect, useState } from 'react'
 
 const Globe = dynamic(() => import('./globe'), {
   ssr: false,
-  loading: () => null
+  loading: () => (
+    <Box
+      w="100%"
+      h="100%"
+      borderRadius="full"
+      bgGradient="radial(circle at 30% 30%, #7dd3fc 0%, #7c3aed 45%, #0b0b14 80%)"
+      opacity={0.9}
+    />
+  )
 })
 
 const PHRASES = [

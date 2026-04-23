@@ -1,16 +1,11 @@
 import Layout from '../components/layouts/main'
 import { sans, mono } from '../components/fonts'
-import { AnimatePresence } from 'framer-motion'
 import Chakra from '../components/chakra'
 import { Analytics } from '@vercel/analytics/react'
 
-if (typeof window !== 'undefined') {
-  window.history.scrollRestoration = 'manual'
-}
-
 function Website({ Component, pageProps, router }) {
   return (
-    <Chakra cookies={pageProps.cookies}>
+    <Chakra>
       <style jsx global>{`
         :root {
           --font-sans: ${sans.style.fontFamily};
@@ -19,17 +14,7 @@ function Website({ Component, pageProps, router }) {
       `}</style>
       <div className={`${sans.variable} ${mono.variable}`}>
         <Layout router={router}>
-          <AnimatePresence
-            mode="wait"
-            initial={true}
-            onExitComplete={() => {
-              if (typeof window !== 'undefined') {
-                window.scrollTo({ top: 0 })
-              }
-            }}
-          >
-            <Component {...pageProps} key={router.route} />
-          </AnimatePresence>
+          <Component {...pageProps} />
           <Analytics />
         </Layout>
       </div>
