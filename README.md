@@ -28,3 +28,5 @@ pages/        # index.js is the whole site
 lib/theme.js  # chakra theme + global styles
 public/       # favicons + profile image
 ```
+
+[Credits to craftz.dog](https://www.craftz.dog/) - Initally took insipration from 
