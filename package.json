@@ -12,6 +12,9 @@
   "keywords": [],
   "author": "Xia Jie Ou",
   "license": "MIT",
+  "engines": {
+    "node": "22.x"
+  },
   "dependencies": {
     "@chakra-ui/react": "^2.8.1",
     "@emotion/react": "^11.11.1",
