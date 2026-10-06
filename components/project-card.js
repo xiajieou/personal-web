@@ -1,181 +1,253 @@
+import { Box, Button, Flex, Text } from '@chakra-ui/react'
 import {
-  Box,
-  Flex,
-  Heading,
-  Link,
-  Text,
-  HStack,
-  useColorModeValue
-} from '@chakra-ui/react'
-import { useRef, useState } from 'react'
+  GiFirstAidKit,
+  GiFlame,
+  GiLockedChest,
+  GiPowerLightning,
+  GiThreeFriends,
+  GiThreeLeaves
+} from 'react-icons/gi'
+import {
+  IoCodeSlash,
+  IoLogoGithub,
+  IoOpenOutline,
+  IoScanCircle,
+  IoTrophy
+} from 'react-icons/io5'
+import { getRarity, rarityGradient } from '../lib/rarity'
+import { BulletList } from './experience-item'
+import { TagList } from './skill-tag'
 
-const GradientPreview = ({ gradient, label }) => (
-  <Box
-    aria-hidden="true"
-    position="relative"
-    h="140px"
-    borderTopRadius="xl"
-    overflow="hidden"
-    sx={{ background: gradient }}
-  >
-    <Box
-      position="absolute"
-      inset={0}
-      sx={{
-        backgroundImage:
-          'linear-gradient(rgba(255,255,255,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.08) 1px, transparent 1px)',
-        backgroundSize: '24px 24px',
-        maskImage:
-          'radial-gradient(ellipse at center, black 40%, transparent 85%)',
-        WebkitMaskImage:
-          'radial-gradient(ellipse at center, black 40%, transparent 85%)'
-      }}
-    />
-    <Box
-      position="absolute"
-      bottom={3}
-      left={4}
-      fontFamily="var(--font-mono)"
-      fontSize="xs"
-      color="rgba(255,255,255,0.85)"
-      letterSpacing="0.1em"
-      textTransform="uppercase"
-    >
-      {label}
-    </Box>
-  </Box>
-)
+// `icon` keys used in lib/data.js. Anything else falls back to a chest.
+const ICONS = {
+  flame: GiFlame,
+  bolt: GiPowerLightning,
+  leaf: GiThreeLeaves,
+  scan: IoScanCircle,
+  medkit: GiFirstAidKit,
+  code: IoCodeSlash,
+  team: GiThreeFriends
+}
 
-const TechPill = ({ children }) => {
-  const bg = useColorModeValue(
-    'rgba(15,15,20,0.06)',
-    'rgba(255,255,255,0.06)'
-  )
-  const border = useColorModeValue(
-    'rgba(15,15,20,0.1)',
-    'rgba(255,255,255,0.08)'
-  )
+const LINK_ICONS = {
+  GitHub: IoLogoGithub,
+  Devpost: IoTrophy,
+  Live: IoOpenOutline
+}
+
+const RAYS =
+  'repeating-conic-gradient(from -4deg, rgba(255, 255, 255, 0.17) 0deg 8deg, rgba(255, 255, 255, 0) 8deg 20deg)'
+const RAYS_MASK = 'radial-gradient(closest-side, #000 12%, transparent 78%)'
+
+// Dark outline that keeps the colored border crisp against the bright sky
+const INK_RING = '0 0 0 2px rgba(10, 18, 56, 0.6)'
+
+const noMotion = {
+  '@media (prefers-reduced-motion: reduce)': {
+    transition: 'none',
+    _hover: { transform: 'none' }
+  }
+}
+
+// Rarity-colored art: sunburst, icon, and a strip naming the tier
+const LootArt = ({ rarity, icon, compact }) => {
+  const r = getRarity(rarity)
+  const Icon = ICONS[icon] || GiLockedChest
+
   return (
-    <Box
-      as="span"
-      fontSize="xs"
-      fontFamily="var(--font-mono)"
-      px={2}
-      py={0.5}
-      borderRadius="md"
-      bg={bg}
-      border="1px solid"
-      borderColor={border}
+    <Flex
+      aria-hidden="true"
+      position="relative"
+      direction="column"
+      flexShrink={0}
+      overflow="hidden"
+      w={compact ? '100%' : { base: '100%', md: '220px' }}
+      h={compact ? '96px' : { base: '140px', md: 'auto' }}
+      bg={rarityGradient(rarity)}
     >
-      {children}
-    </Box>
+      <Box
+        position="absolute"
+        inset="-60%"
+        bg={RAYS}
+        sx={{ maskImage: RAYS_MASK, WebkitMaskImage: RAYS_MASK }}
+      />
+      <Flex
+        position="relative"
+        flex={1}
+        minH={0}
+        align="center"
+        justify="center"
+      >
+        <Box
+          as={Icon}
+          boxSize={compact ? '44px' : { base: '72px', md: '84px' }}
+          color="white"
+          filter="drop-shadow(0 4px 0 rgba(10, 18, 56, 0.6)) drop-shadow(0 8px 10px rgba(10, 18, 56, 0.3))"
+        />
+      </Flex>
+      <Box
+        position="relative"
+        py={compact ? '3px' : 1}
+        textStyle="hud"
+        fontSize="xs"
+        letterSpacing="0.16em"
+        textAlign="center"
+        color="fn.ink"
+        bg={r.color}
+        borderTop="2px solid rgba(10, 18, 56, 0.4)"
+      >
+        {r.label}
+      </Box>
+    </Flex>
   )
 }
 
 const ProjectCard = ({
   title,
-  description,
+  subtitle,
+  award,
+  win,
+  summary,
+  rarity,
+  icon,
+  bullets = [],
   tags = [],
-  repoLink,
-  liveLink,
-  meta,
-  gradient,
-  previewLabel
+  links = [],
+  compact = false,
+  headingAs = 'h3'
 }) => {
-  const cardBg = useColorModeValue(
-    'rgba(255,255,255,0.7)',
-    'rgba(17,17,26,0.7)'
-  )
-  const border = useColorModeValue(
-    'rgba(15,15,20,0.08)',
-    'rgba(255,255,255,0.08)'
-  )
-  const ref = useRef(null)
-  const [style, setStyle] = useState({})
-
-  const onMouseMove = e => {
-    const el = ref.current
-    if (!el) return
-    const rect = el.getBoundingClientRect()
-    const x = ((e.clientX - rect.left) / rect.width) * 100
-    const y = ((e.clientY - rect.top) / rect.height) * 100
-    setStyle({
-      background: `radial-gradient(320px circle at ${x}% ${y}%, rgba(124,58,237,0.18), transparent 40%)`
-    })
-  }
-
-  const resetStyle = () => setStyle({})
+  const r = getRarity(rarity)
+  const showBullets = !compact && bullets.length > 0
 
   return (
-    <Box
-      ref={ref}
-      onMouseMove={onMouseMove}
-      onMouseLeave={resetStyle}
-      position="relative"
-      borderRadius="xl"
-      border="1px solid"
-      borderColor={border}
-      bg={cardBg}
-      css={{ backdropFilter: 'blur(8px)' }}
+    <Flex
+      as="article"
+      layerStyle="panel"
+      borderWidth="3px"
+      borderColor={r.color}
+      boxShadow={`${INK_RING}, 0 6px 0 2px rgba(5, 10, 40, 0.55), 0 22px 40px -18px rgba(3, 8, 30, 0.75)`}
       overflow="hidden"
-      transition="transform 220ms ease, border-color 220ms ease"
+      direction={compact ? 'column' : { base: 'column', md: 'row' }}
+      h="100%"
+      transition="transform 180ms ease, box-shadow 180ms ease"
       _hover={{
         transform: 'translateY(-3px)',
-        borderColor: 'rgba(124,58,237,0.4)'
+        boxShadow: `${INK_RING}, 0 9px 0 2px rgba(5, 10, 40, 0.55), 0 0 30px 4px ${r.glow}`
       }}
-      h="100%"
-      display="flex"
-      flexDirection="column"
+      sx={noMotion}
     >
-      <Box
-        pointerEvents="none"
-        position="absolute"
-        inset={0}
-        style={style}
-        transition="background 120ms ease"
-      />
-      <GradientPreview gradient={gradient} label={previewLabel} />
-      <Box p={5} position="relative" display="flex" flexDirection="column" flex={1}>
-        {meta && (
+      <LootArt rarity={rarity} icon={icon} compact={compact} />
+
+      <Flex
+        direction="column"
+        flex={1}
+        minW={0}
+        p={compact ? 4 : { base: 5, md: 7 }}
+        pt={compact ? 4 : { base: 5, md: 6 }}
+      >
+        {(win || award) && (
+          <Flex wrap="wrap" align="center" columnGap={3} rowGap={2} mb={3}>
+            {win && (
+              <Box
+                aria-hidden="true"
+                layerStyle="tag"
+                flexShrink={0}
+                px={2.5}
+                pt="6px"
+                pb="3px"
+              >
+                <Box
+                  as="span"
+                  display="block"
+                  textStyle="display"
+                  fontSize={compact ? '13px' : '15px'}
+                  transform="skewX(8deg)"
+                >
+                  #1 Victory Royale
+                </Box>
+              </Box>
+            )}
+            {award && (
+              <Text
+                textStyle="hud"
+                fontSize={compact ? 'xs' : 'sm'}
+                color="fn.yellow"
+              >
+                {award}
+              </Text>
+            )}
+          </Flex>
+        )}
+
+        <Box
+          as={headingAs}
+          textStyle="display"
+          fontSize={compact ? '22px' : { base: '30px', md: '36px' }}
+          lineHeight={1.05}
+          color="white"
+        >
+          {title}
+        </Box>
+        {subtitle && (
           <Text
-            fontFamily="var(--font-mono)"
-            fontSize="xs"
-            color="accent.cyan"
-            mb={1}
+            mt={1.5}
+            textStyle="hud"
+            fontSize={compact ? 'sm' : { base: 'sm', md: 'md' }}
+            color="fn.ice"
           >
-            {meta}
+            {subtitle}
           </Text>
         )}
-        <Heading as="h3" fontSize="lg" fontWeight={700} mb={2}>
-          {title}
-        </Heading>
-        <Text
-          fontSize="sm"
-          opacity={0.8}
-          mb={4}
-          flex={1}
-        >
-          {description}
-        </Text>
-        <HStack spacing={2} flexWrap="wrap" rowGap={2} mb={4}>
-          {tags.map(t => (
-            <TechPill key={t}>{t}</TechPill>
-          ))}
-        </HStack>
-        <Flex gap={4} fontSize="sm">
-          {repoLink && (
-            <Link href={repoLink} target="_blank" rel="noopener">
-              github ↗
-            </Link>
+
+        {showBullets ? (
+          <BulletList
+            items={bullets}
+            marker={r.color}
+            mt={4}
+            fontSize={{ base: 'sm', md: 'md' }}
+          />
+        ) : (
+          summary && (
+            <Text
+              mt={3}
+              fontSize={compact ? 'sm' : { base: 'sm', md: 'md' }}
+              lineHeight={1.65}
+              color="rgba(244, 248, 255, 0.92)"
+            >
+              {summary}
+            </Text>
+          )
+        )}
+
+        {/* mt="auto" pins tags and links to the bottom when cards share a row */}
+        <Box mt="auto">
+          <TagList items={tags} mt={compact ? 4 : 5} />
+          {links.length > 0 && (
+            <Flex wrap="wrap" gap={2.5} mt={compact ? 4 : 5}>
+              {links.map(link => {
+                const LinkIcon = LINK_ICONS[link.label] || IoOpenOutline
+                return (
+                  <Button
+                    key={link.href}
+                    as="a"
+                    href={link.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={`${link.label}: ${title}`}
+                    variant="hud"
+                    size="sm"
+                    bg="whiteAlpha.100"
+                    leftIcon={<LinkIcon aria-hidden="true" />}
+                  >
+                    {link.label}
+                  </Button>
+                )
+              })}
+            </Flex>
           )}
-          {liveLink && (
-            <Link href={liveLink} target="_blank" rel="noopener">
-              live ↗
-            </Link>
-          )}
-        </Flex>
-      </Box>
-    </Box>
+        </Box>
+      </Flex>
+    </Flex>
   )
 }
 
