@@ -8,7 +8,7 @@ import Sky from '../sky'
 import DropHud from '../drop-hud'
 import { PROFILE } from '../../lib/data'
 
-const DESCRIPTION = `${PROFILE.name}: software engineer and computer science student at ${PROFILE.school}, Class of ${PROFILE.gradYear}. GPU deep learning, AI agents, full-stack apps, and hackathons.`
+const DESCRIPTION = `${PROFILE.name}: software engineer and computer science student at ${PROFILE.school}, Class of ${PROFILE.gradYear}. AI agents, full-stack apps, and hackathons.`
 
 const Main = ({ children }) => {
   const { events } = useRouter()
